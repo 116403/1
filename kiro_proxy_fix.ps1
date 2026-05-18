@@ -101,8 +101,15 @@ $kiroProcesses = Get-Process -Name "*kiro*" -ErrorAction SilentlyContinue
 if ($kiroProcesses) {
     Write-Host "  Found $($kiroProcesses.Count) Kiro processes, closing..." -ForegroundColor Cyan
     $kiroProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 3
-    Write-Host "  [OK] Kiro closed" -ForegroundColor Green
+    # Also wait for child/helper processes
+    Start-Sleep -Seconds 2
+    $stillAlive = Get-Process -Name "*kiro*" -ErrorAction SilentlyContinue
+    if ($stillAlive) {
+        Write-Host "  Some Kiro helpers still running, force killing..." -ForegroundColor DarkYellow
+        $stillAlive | Stop-Process -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
+    }
+    Write-Host "  [OK] Kiro and all helpers closed" -ForegroundColor Green
 } else {
     Write-Host "  Kiro not running" -ForegroundColor Green
 }
